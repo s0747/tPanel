@@ -1,0 +1,23 @@
+[package]
+name    = "broker"
+version = "0.1.0"
+edition = "2021"
+
+# mqtt-connector łączy dwie role w jednym procesie:
+# 1. Broker MQTT — nasłuchuje na TCP/TLS/QUIC, przyjmuje połączenia czujników
+# 2. Bridge      — subskrybuje topic czujników i forwarduje HTTP POST
+#                  do weather-dashboard API
+
+[dependencies]
+tokio      = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+dotenvy    = { workspace = true }
+reqwest    = { workspace = true }
+
+# transport-quic i transport-websocket domyślnie włączone w mqtt5
+mqtt5 = "0.31"
+
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror          = "2"

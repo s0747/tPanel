@@ -1,0 +1,29 @@
+# Root Cargo.toml
+[profile.release]
+lto = "fat"              # Link-time optimization
+codegen-units = 1        # Better optimization
+panic = "abort"          # Smaller binaries
+
+[profile.dev]
+debug = 1                # Faster dev builds
+opt-level = 1            # Some optimization in dev
+
+[workspace]
+members = [
+    "core",
+    "panel",
+    "sender",
+    "broker",
+    "generator",
+    "gw-post",
+]
+resolver = "2"
+
+# Wspólne zależności
+[workspace.dependencies]
+tokio    = { version = "1",    features = ["full"] }
+serde    = { version = "1",    features = ["derive"] }
+serde_json = "1"
+rand     = "0.10"
+dotenvy  = "0.15"
+reqwest  = { version = "0.13", features = ["json"] }

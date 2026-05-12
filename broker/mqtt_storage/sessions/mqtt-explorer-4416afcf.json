@@ -1,0 +1,34 @@
+{
+  "client_id": "mqtt-explorer-4416afcf",
+  "persistent": true,
+  "expiry_interval": null,
+  "subscriptions": {
+    "$SYS/#": {
+      "qos": "AtMostOnce",
+      "no_local": false,
+      "retain_as_published": false,
+      "retain_handling": 0,
+      "subscription_id": null,
+      "protocol_version": 4,
+      "change_only": false,
+      "flow_id": null
+    },
+    "#": {
+      "qos": "AtMostOnce",
+      "no_local": false,
+      "retain_as_published": false,
+      "retain_handling": 0,
+      "subscription_id": null,
+      "protocol_version": 4,
+      "change_only": false,
+      "flow_id": null
+    }
+  },
+  "will_message": null,
+  "will_delay_interval": null,
+  "receive_maximum": 65535,
+  "change_only_state": {
+    "last_payload_hashes": {}
+  },
+  "user_id": null
+}

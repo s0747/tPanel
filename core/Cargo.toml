@@ -1,0 +1,28 @@
+[package]
+name    = "core"
+version = "0.1.0"
+edition = "2021"
+
+# archiver — konsument MQTT + archiwum SQLite + HTTP API historii
+#
+# Rola:
+#   1. Subskrybuje broker MQTT (sensors/#)
+#   2. Zapisuje odczyty do SQLite
+#   3. Udostępnia historię przez HTTP GET /api/range?from=X&to=Y
+#
+# Przepływ:
+#   mqtt-broker ──PUBLISH──→ archiver ──INSERT──→ SQLite
+#   dashboard   ──GET /api/range──→ archiver ──SELECT──→ JSON
+
+[dependencies]
+tokio      = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+dotenvy    = { workspace = true }
+
+axum       = { version = "0.7", features = ["macros"] }
+mqtt5      = "0.31"
+sqlx       = { version = "0.8", features = ["sqlite", "runtime-tokio"] }
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror  = "2"

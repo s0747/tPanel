@@ -1,0 +1,173 @@
+use axum::{
+    extract::{Path, Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
+use serde_json;
+use serde::Deserialize;
+use sqlx::SqlitePool;
+use std::sync::Arc;
+use tracing::warn;
+
+use crate::db;
+use crate::models::RangeResponse;
+
+/// Współdzielony stan Axum
+#[derive(Clone)]
+pub struct ApiState {
+    pub pool:       Arc<SqlitePool>,
+    pub max_points: usize,
+}
+
+/// Parametry zapytania GET /api/range
+///
+/// GET /api/range?from=X                          ← wszystkie czujniki
+/// GET /api/range?from=X&to=Y                     ← zakres czasu
+/// GET /api/range?from=X&sensor_id=sensor-01      ← filtr czujnika
+/// GET /api/range?from=X&to=Y&sensor_id=room-temp ← oba filtry
+#[derive(Deserialize)]
+pub struct RangeParams {
+    pub from:      f64,
+    pub to:        Option<f64>,
+    pub sensor_id: Option<String>,
+}
+
+/// GET /api/range
+///
+/// Zwraca punkty z zakresu [from, to] jako JSON.
+/// Opcjonalnie filtruje po sensor_id.
+///
+/// Kody odpowiedzi:
+///   200 OK               — lista punktów (może być pusta)
+///   400 Bad Request      — nieprawidłowe parametry
+///   500 Internal Error   — błąd bazy
+pub async fn range(
+    State(state): State<ApiState>,
+    Query(params): Query<RangeParams>,
+) -> impl IntoResponse {
+    let to = params.to.unwrap_or_else(now_secs);
+
+    // Walidacja
+    if !params.from.is_finite() || !to.is_finite() {
+        return (
+            StatusCode::BAD_REQUEST,
+            "from i to muszą być skończonymi liczbami",
+        ).into_response();
+    }
+
+    if params.from > to {
+        return (
+            StatusCode::BAD_REQUEST,
+            "from musi być mniejsze lub równe to",
+        ).into_response();
+    }
+
+    let limit = state.max_points as i64;
+
+    match db::load_range(
+        &state.pool,
+        params.from,
+        to,
+        limit,
+        params.sensor_id.as_deref(),
+    ).await {
+        Ok(points) => {
+            let count = points.len();
+            if count == limit as usize {
+                warn!(
+                    "Wynik przycięty do {} punktów — rozważ zmniejszenie zakresu",
+                    limit
+                );
+            }
+            Json(RangeResponse {
+                from:      params.from,
+                to,
+                sensor_id: params.sensor_id,
+                count,
+                points,
+            })
+            .into_response()
+        }
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// GET /api/sensors
+///
+/// Zwraca listę unikalnych sensor_id zarejestrowanych w bazie.
+pub async fn sensors(
+    State(state): State<ApiState>,
+) -> impl IntoResponse {
+    match db::list_sensors(&state.pool).await {
+        Ok(ids)  => Json(ids).into_response(),
+        Err(e)   => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// GET /api/panels/:panel_uuid/sensors
+///
+/// Zwraca listę czujników przypisanych do panelu.
+pub async fn panel_sensors(
+    State(state): State<ApiState>,
+    Path(panel_uuid): Path<String>,
+) -> impl IntoResponse {
+    match db::list_panel_sensors(&state.pool, &panel_uuid).await {
+        Ok(sensors) => {
+            let body: Vec<serde_json::Value> = sensors.into_iter().map(|s| {
+                serde_json::json!({
+                    "sensor_uuid": s.sensor_uuid,
+                    "name":        s.name,
+                })
+            }).collect();
+            Json(body).into_response()
+        }
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// POST /api/panels/:panel_uuid/sensors
+///
+/// Dodaje czujnik do panelu.
+/// Body: { "sensor_uuid": "abc-123", "name": "Salon" }
+pub async fn add_panel_sensor(
+    State(state): State<ApiState>,
+    Path(panel_uuid): Path<String>,
+    Json(body): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    let sensor_uuid = match body["sensor_uuid"].as_str() {
+        Some(s) if !s.is_empty() => s.to_owned(),
+        _ => return (StatusCode::BAD_REQUEST, "brak sensor_uuid").into_response(),
+    };
+    let name = body["name"].as_str().map(str::to_owned);
+
+    match db::add_panel_sensor(&state.pool, &panel_uuid, &sensor_uuid, name.as_deref()).await {
+        Ok(_)  => StatusCode::CREATED.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// DELETE /api/panels/:panel_uuid/sensors/:sensor_uuid
+///
+/// Usuwa czujnik z panelu.
+pub async fn remove_panel_sensor(
+    State(state): State<ApiState>,
+    Path((panel_uuid, sensor_uuid)): Path<(String, String)>,
+) -> impl IntoResponse {
+    match db::remove_panel_sensor(&state.pool, &panel_uuid, &sensor_uuid).await {
+        Ok(_)  => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// GET /health
+pub async fn health() -> impl IntoResponse {
+    StatusCode::OK
+}
+
+fn now_secs() -> f64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64()
+}

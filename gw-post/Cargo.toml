@@ -1,0 +1,31 @@
+[package]
+name    = "gw-post"
+version = "0.1.0"
+edition = "2021"
+
+# gw-post — gateway HTTP POST → MQTT PUBLISH
+#
+# Przyjmuje odczyty z czujników przez HTTP POST,
+# publikuje je na broker MQTT jako zdarzenia na topicu sensors/{sensor_id}/data.
+#
+# Przepływ:
+#   sender ──POST /──→ gw-post ──PUBLISH──→ mqtt-broker
+#
+# Format payload wejściowy (JSON):
+#   { "sensor_id": "s1", "ts": 1744123456.789, "temp": 22.4, "humidity": 58.1 }
+#
+# Format MQTT publish:
+#   topic:   sensors/{sensor_id}/data
+#   payload: { "ts": ..., "temp": ..., "humidity": ... }
+
+[dependencies]
+tokio      = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+dotenvy    = { workspace = true }
+
+axum       = { version = "0.7", features = ["macros"] }
+mqtt5      = "0.31"
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror  = "2"

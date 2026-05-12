@@ -1,0 +1,64 @@
+pub mod dashboard;
+pub mod layout;
+
+use crate::config::{Config, APP_NAME, APP_VERSION};
+use crate::models::DataPoint;
+use maud::{html, Markup, DOCTYPE};
+
+/// Renderuje pełną stronę HTML z danymi historycznymi i konfiguracją
+pub fn page(history: &[DataPoint], cfg: &Config) -> Markup {
+    let data_json = serde_json::to_string(history).unwrap_or_else(|_| "[]".to_owned());
+
+    html! {
+        (DOCTYPE)
+        html lang="pl" {
+            (layout::head())
+            body {
+                div.dashboard {
+                    (header_section())
+                    (dashboard::metric_cards())
+                    (dashboard::chart_card(cfg))
+                    (footer_section())
+                }
+                (dashboard::scripts(&data_json, cfg))
+            }
+        }
+    }
+}
+
+fn header_section() -> Markup {
+    html! {
+        header.dash-header {
+            div.logo-area {
+                h1 { (app_name_spans()) }
+                p { "sensor data" }
+            }
+            div.theme-toggle {
+                span.theme-icon id="theme-icon" { "☀" }
+                div.theme-track id="theme-track" onclick="toggleTheme()" {}
+            }
+        }
+    }
+}
+
+/// Renderuje nazwę z Cargo.toml jako dwa kolorowe spany (pierwsza połowa / druga)
+fn app_name_spans() -> Markup {
+    //let name = APP_NAME.to_uppercase();
+    let name = APP_NAME;
+    let mid = (name.len() + 1) / 2;
+    let (first, second) = name.split_at(mid);
+    html! {
+        span.accent-temp  { (first)  }
+        span.accent-humid { (second) }
+    }
+}
+
+fn footer_section() -> Markup {
+    html! {
+        footer.dash-footer {
+            (APP_NAME) " v" (APP_VERSION) " · axum + sse + maud + pico.css + uplot + datastar · "
+            span id="update-count" { "0" }
+            " aktualizacji"
+        }
+    }
+}

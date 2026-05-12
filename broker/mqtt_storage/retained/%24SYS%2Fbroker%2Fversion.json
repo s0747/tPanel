@@ -1,0 +1,15 @@
+{
+  "topic": "$SYS/broker/version",
+  "payload": [
+    48,
+    46,
+    51,
+    49,
+    46,
+    52
+  ],
+  "qos": "AtMostOnce",
+  "retain": true,
+  "stored_at_secs": 1778588087,
+  "message_expiry_interval": null
+}

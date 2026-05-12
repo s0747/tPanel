@@ -1,0 +1,28 @@
+[package]
+name    = "generator"
+version = "0.1.0"
+edition = "2021"
+
+# generator odpowiada za:
+# 1. generowanie par wartości (temp, humidity) w pętli co GENERATOR_INTERVAL sekund
+# 2. wypisywanie na stdout w formacie: "TEMP HUMIDITY\n"
+# 3. trzymanie stanu random walk wewnętrznie
+#
+# Uruchomienie:
+#   ./generator | ./sender
+#
+# Interfejs:
+#   stdout: "22.4 58.1\n"  (co GENERATOR_INTERVAL sekund)
+#   stderr: komunikaty diagnostyczne
+#   exit 0: zamknięcie przez sygnał
+#   exit 1: błąd konfiguracji
+#
+# Zakresy konfigurowane przez zmienne środowiskowe / .env:
+#   GENERATOR_INTERVAL  — interwał w sekundach (domyślnie: 2)
+#   TEMP_MIN / TEMP_MAX / HUMIDITY_MIN / HUMIDITY_MAX
+#   TEMP_STEP / HUMIDITY_STEP
+
+[dependencies]
+rand    = { workspace = true }
+dotenvy = { workspace = true }
+tokio   = { workspace = true }

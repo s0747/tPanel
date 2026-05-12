@@ -1,0 +1,449 @@
+/* ── Zmienne — Apple design system ──────────────────────────────────────────── */
+:root {
+    /* Systemowa czcionka Apple (SF Pro) */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+                 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', ui-monospace, 'Menlo', 'Monaco', monospace;
+
+    /* Kolory systemowe iOS/macOS */
+    --color-temp:    #ff3b30;   /* iOS Red */
+    --color-humid:   #007aff;   /* iOS Blue */
+    --color-green:   #34c759;   /* iOS Green */
+
+    /* Tło — jasny macOS */
+    --color-bg:         #f2f2f7;   /* systemGray6 */
+    --color-surface:    rgba(255, 255, 255, 0.72);
+    --color-surface-2:  rgba(255, 255, 255, 0.9);
+    --color-border:     rgba(60, 60, 67, 0.13);
+    --color-separator:  rgba(60, 60, 67, 0.18);
+
+    /* Tekst */
+    --color-text:       #1c1c1e;   /* label */
+    --color-text-2:     #3a3a3c;   /* secondaryLabel */
+    --color-muted:      #8e8e93;   /* tertiaryLabel */
+
+    /* Cienie */
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-hover: 0 4px 20px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+
+    /* Promienie */
+    --radius-card:  18px;
+    --radius-pill:  100px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtelna tekstura tła */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 70% 50% at 10% 5%,  rgba(255,59,48,0.04)  0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 90%, rgba(0,122,255,0.05)  0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────────── */
+.dashboard {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 2rem;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────────── */
+header.dash-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+}
+
+.logo-area h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1;
+}
+
+.logo-area h1 span.accent-temp  { color: var(--color-temp); }
+.logo-area h1 span.accent-humid { color: var(--color-humid); }
+
+.logo-area p {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    margin: 0.35rem 0 0;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Status pill — iOS style */
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--color-surface);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: 0.35rem 0.85rem;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    box-shadow: var(--shadow-card);
+    letter-spacing: 0.03em;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-green);
+    animation: pulse-green 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(52,199,89,0.5); }
+    50%       { box-shadow: 0 0 0 4px rgba(52,199,89,0);   }
+}
+
+/* ── Metric cards ────────────────────────────────────────────────────────────── */
+.metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric-card {
+    background: var(--color-surface);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: 1.5rem 1.5rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.metric-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+}
+
+/* Kolorowy pasek u góry — cieńszy, bardziej Apple */
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+}
+
+.metric-card.temp::before  { background: var(--color-temp); }
+.metric-card.humid::before { background: var(--color-humid); }
+
+/* Symbol ikony w tle — subtelna dekoracja */
+.metric-card::after {
+    content: '';
+    position: absolute;
+    top: -10px; right: -10px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    opacity: 0.04;
+}
+
+.metric-card.temp::after  { background: var(--color-temp); }
+.metric-card.humid::after { background: var(--color-humid); }
+
+.metric-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 3rem;
+    font-weight: 300;           /* SF Pro Display Light — typowe dla Apple */
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-card.temp  .metric-value { color: var(--color-temp); }
+.metric-card.humid .metric-value { color: var(--color-humid); }
+
+.metric-unit {
+    font-size: 1.1rem;
+    font-weight: 300;
+    opacity: 0.7;
+    margin-left: 1px;
+    letter-spacing: 0;
+}
+
+.metric-trend {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    margin-top: 0.6rem;
+    letter-spacing: 0.01em;
+}
+
+/* ── Chart card ──────────────────────────────────────────────────────────────── */
+.chart-card {
+    background: var(--color-surface);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.chart-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-text-2);
+}
+
+.legend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+}
+
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+#chart-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.uplot { font-family: var(--font-mono) !important; }
+
+/* ── Footer & controls ───────────────────────────────────────────────────────── */
+footer.dash-footer {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 0.5px solid var(--color-separator);
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    letter-spacing: 0.03em;
+}
+
+.controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-label {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.control-info {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    text-align: center;
+    flex: 1;
+}
+
+/* Select — styl Apple. footer zwiększa specyficzność ponad Pico.css */
+footer .control-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.5px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.25rem 1.6rem 0.25rem 0.6rem;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--color-text);
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    /* Strzałka */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238e8e93'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    transition: border-color 0.15s;
+}
+
+footer .control-select:focus {
+    outline: none;
+    border-color: var(--color-humid);
+}
+
+/* Przyciski motywu — zamienne piktogramy */
+.theme-switcher {
+    display: flex;
+    gap: 0.2rem;
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.5px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.2rem;
+    box-shadow: var(--shadow-card);
+}
+
+.theme-btn {
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    width: 28px;
+    height: 24px;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-muted);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.theme-btn:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+.theme-btn.active {
+    background: var(--color-humid);
+    color: #ffffff;
+}
+
+.theme-btn:active { transform: scale(0.9); }
+
+/* ── Animacje ────────────────────────────────────────────────────────────────── */
+@keyframes flash-value {
+    0%   { opacity: 0.3; transform: translateY(-3px); }
+    100% { opacity: 1;   transform: translateY(0); }
+}
+
+.value-updated { animation: flash-value 0.25s ease-out forwards; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .dashboard    { padding: 2rem 1rem 1.5rem; }
+    .metrics-row  { grid-template-columns: 1fr; }
+    .metric-value { font-size: 2.6rem; }
+    .dash-header  { flex-direction: column; gap: 1rem; align-items: flex-start; }
+    .controls-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .control-info { text-align: left; }
+}
+
+/* ── Dark mode — macOS dark palette ─────────────────────────────────────────── */
+[data-theme="dark"] {
+    --color-bg:         #1c1c1e;   /* systemBackground dark */
+    --color-surface:    rgba(44, 44, 46, 0.80);
+    --color-surface-2:  rgba(44, 44, 46, 0.95);
+    --color-border:     rgba(255, 255, 255, 0.10);
+    --color-separator:  rgba(255, 255, 255, 0.14);
+
+    --color-text:       #f2f2f7;
+    --color-text-2:     #ebebf0;
+    --color-muted:      #8e8e93;
+
+    --shadow-card:  0 2px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.25);
+    --shadow-hover: 0 4px 24px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.30);
+}
+
+[data-theme="dark"] body::before {
+    background:
+        radial-gradient(ellipse 70% 50% at 10% 5%,  rgba(255,59,48,0.07)  0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 90%, rgba(0,122,255,0.08)  0%, transparent 60%);
+}
+
+
+/* ── Wskaźnik live (pojawia się po history_end) ──────────────────────────────── */
+#live-indicator {
+    display: none;  /* pokazywany przez JS po history_end */
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--color-surface);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    padding: 0.35rem 0.85rem;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: var(--color-muted);
+    box-shadow: var(--shadow-card);
+    letter-spacing: 0.03em;
+}
+
+/* ── optgroup w selektorze widoku ────────────────────────────────────────────── */
+footer .control-select optgroup {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    background: var(--color-surface-2);
+}
+
+footer .control-select option {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text);
+    background: var(--color-surface-2);
+}
