@@ -1,0 +1,23 @@
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      
+      # Build all crates
+      - run: cargo build --workspace
+      
+      # Test all crates  
+      # - run: cargo test --workspace
+      
+      # Check formatting
+      - run: cargo fmt --all --check
+      
+      # Lint with clippy
+      - run: cargo clippy --workspace -- -D warnings
