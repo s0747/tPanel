@@ -852,21 +852,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gw-post"
-version = "0.1.0"
-dependencies = [
- "axum 0.7.9",
- "dotenvy",
- "mqtt5",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "h2"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -992,6 +977,21 @@ dependencies = [
  "http",
  "http-body",
  "pin-project-lite",
+]
+
+[[package]]
+name = "http-bridge"
+version = "0.1.0"
+dependencies = [
+ "axum 0.7.9",
+ "dotenvy",
+ "mqtt5",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

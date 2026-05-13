@@ -15,7 +15,7 @@ members = [
     "sender",
     "broker",
     "generator",
-    "gw-post",
+    "http-bridge",
 ]
 resolver = "2"
 

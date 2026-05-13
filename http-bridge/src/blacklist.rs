@@ -153,18 +153,18 @@ mod tests {
         let ip: IpAddr = "1.2.3.4".parse().unwrap();
         assert!(!bl.is_banned(ip));
     }
-/*
-    #[test]
-    fn banned_after_threshold() {
-        let bl = make_blacklist(3, 60, 300);
-        let ip: IpAddr = "1.2.3.4".parse().unwrap();
-        bl.record_failure(ip);
-        bl.record_failure(ip);
-        assert!(!bl.is_banned(ip));
-        bl.record_failure(ip);
-        assert!(bl.is_banned(ip));
-    }
-*/
+    /*
+        #[test]
+        fn banned_after_threshold() {
+            let bl = make_blacklist(3, 60, 300);
+            let ip: IpAddr = "1.2.3.4".parse().unwrap();
+            bl.record_failure(ip);
+            bl.record_failure(ip);
+            assert!(!bl.is_banned(ip));
+            bl.record_failure(ip);
+            assert!(bl.is_banned(ip));
+        }
+    */
     #[test]
     fn success_clears_failures() {
         let bl = make_blacklist(3, 60, 300);
