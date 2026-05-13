@@ -11,8 +11,8 @@ struct SensorReading {
     humidity: f64,
 }
 
-/// Typ aliasu dla nadawcy kanału forward
-//pub type ForwardSender = tokio::sync::mpsc::Sender<mqtt5::broker::ClientPublishEvent>;
+// Typ aliasu dla nadawcy kanału forward
+// pub type ForwardSender = tokio::sync::mpsc::Sender<mqtt5::broker::ClientPublishEvent>;
 
 /// Wyciąga sensor_id z nazwy topicu.
 /// Oczekiwany format: sensors/{sensor_id}/data lub sensors/{sensor_id}

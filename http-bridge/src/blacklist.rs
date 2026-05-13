@@ -61,7 +61,7 @@ impl Blacklist {
         entries
             .get(&ip)
             .and_then(|e| e.banned_until)
-            .map_or(false, |t| Instant::now() < t)
+            .is_some_and(|t| Instant::now() < t)
     }
 
     /// Rejestruje błąd autoryzacji dla IP.
@@ -124,7 +124,7 @@ impl Blacklist {
         let before = entries.len();
         entries.retain(|_, e| {
             // Zachowaj zablokowanych i tych którzy byli aktywni niedawno
-            e.banned_until.map_or(false, |t| now < t) || now.duration_since(e.last_seen) < ttl
+            e.banned_until.is_some_and(|t| now < t) || now.duration_since(e.last_seen) < ttl
         });
         let removed = before - entries.len();
         if removed > 0 {

@@ -45,7 +45,7 @@ fn header_section() -> Markup {
 /// Renderuje nazwę z Cargo.toml jako dwa kolorowe spany (pierwsza połowa / druga)
 fn app_name_spans() -> Markup {
     let name = APP_NAME.to_uppercase();
-    let mid = (name.len() + 1) / 2;
+    let mid = name.len().div_ceil(2);
     let (first, second) = name.split_at(mid);
     html! {
         span.accent-temp  { (first)  }
