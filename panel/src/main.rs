@@ -9,10 +9,13 @@ mod views;
 //use std::time::Duration;
 //use axum::{Router, routing::{get, post}, middleware as axum_middleware};
 //use axum::extract::Extension;
-use axum::{Router, routing::{get, post}};
-use tower_http::services::ServeDir;
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use config::{Config, APP_NAME, APP_VERSION};
 use models::AppState;
+use tower_http::services::ServeDir;
 
 /* use middleware::ip_filter::{parse_cidr_list, ip_filter_middleware};
 use middleware::rate_limit::{
@@ -32,15 +35,35 @@ async fn main() {
     println!("   HISTORY_MAX           = {}", cfg.history_max);
     println!("   HISTORY_SEED          = {}", cfg.history_seed);
     println!("   CHART_MAX_POINTS      = {}", cfg.chart_max_points);
-    println!("   TEMP                  = {}–{}°C", cfg.temp_min, cfg.temp_max);
-    println!("   HUMIDITY              = {}–{}%", cfg.humidity_min, cfg.humidity_max);
+    println!(
+        "   TEMP                  = {}–{}°C",
+        cfg.temp_min, cfg.temp_max
+    );
+    println!(
+        "   HUMIDITY              = {}–{}%",
+        cfg.humidity_min, cfg.humidity_max
+    );
     println!("   DB_ENABLED            = {}", cfg.db_enabled);
     if cfg.db_enabled {
         println!("   DB_PATH               = {}", cfg.db_path);
         println!("   DB_MAX_CONN           = {}", cfg.db_max_connections);
     }
-    println!("   SENSOR_IP_WHITELIST   = {}", if cfg.sensor_ip_whitelist.is_empty() { "(brak)" } else { &cfg.sensor_ip_whitelist });
-    println!("   SENSOR_IP_BLACKLIST   = {}", if cfg.sensor_ip_blacklist.is_empty() { "(brak)" } else { &cfg.sensor_ip_blacklist });
+    println!(
+        "   SENSOR_IP_WHITELIST   = {}",
+        if cfg.sensor_ip_whitelist.is_empty() {
+            "(brak)"
+        } else {
+            &cfg.sensor_ip_whitelist
+        }
+    );
+    println!(
+        "   SENSOR_IP_BLACKLIST   = {}",
+        if cfg.sensor_ip_blacklist.is_empty() {
+            "(brak)"
+        } else {
+            &cfg.sensor_ip_blacklist
+        }
+    );
     println!("   RATE_LIMIT_MAX        = {} req", cfg.rate_limit_max);
     println!("   RATE_LIMIT_WINDOW     = {}s", cfg.rate_limit_window_secs);
 
@@ -80,7 +103,7 @@ async fn main() {
     }
 
     // ── Middleware — IP filter ─────────────────────────────────────────────
-/*     let whitelist = parse_cidr_list(&state.config.sensor_ip_whitelist);
+    /*     let whitelist = parse_cidr_list(&state.config.sensor_ip_whitelist);
     let blacklist = parse_cidr_list(&state.config.sensor_ip_blacklist);
 
     if !whitelist.is_empty() {
@@ -92,21 +115,21 @@ async fn main() {
     } */
 
     // ── Middleware — Rate limiter ──────────────────────────────────────────
-/*     let rate_map = new_rate_limit_map();
-    let rate_cfg = RateLimitConfig {
-        max_requests: state.config.rate_limit_max,
-        window:       Duration::from_secs(state.config.rate_limit_window_secs),
-    };
+    /*     let rate_map = new_rate_limit_map();
+        let rate_cfg = RateLimitConfig {
+            max_requests: state.config.rate_limit_max,
+            window:       Duration::from_secs(state.config.rate_limit_window_secs),
+        };
 
-    // Uruchom task czyszczący nieaktywne wpisy
-    spawn_cleanup_task(rate_map.clone(), rate_cfg.window); 
+        // Uruchom task czyszczący nieaktywne wpisy
+        spawn_cleanup_task(rate_map.clone(), rate_cfg.window);
 
 
-    println!(
-        "⏱️  Rate limiter: max {} req / {}s per IP",
-        rate_cfg.max_requests, state.config.rate_limit_window_secs
-    );
-*/
+        println!(
+            "⏱️  Rate limiter: max {} req / {}s per IP",
+            rate_cfg.max_requests, state.config.rate_limit_window_secs
+        );
+    */
     let uuid = state.config.uuid.clone();
 
     // ── Trasa POST z middleware ────────────────────────────────────────────
@@ -121,15 +144,18 @@ async fn main() {
         ;
 
     let app = Router::new()
-        .route(&format!("/{uuid}/"),              get(handlers::index_handler))
-        .route(&format!("/{uuid}/sse"),           get(handlers::sse_handler))
+        .route(&format!("/{uuid}/"), get(handlers::index_handler))
+        .route(&format!("/{uuid}/sse"), get(handlers::sse_handler))
         .nest_service(&format!("/{uuid}/static"), ServeDir::new("static"))
         .merge(post_route)
         .with_state(state.clone());
 
     let addr = state.config.bind_addr.clone();
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
-    println!("\n✅ {} v{} uruchomiony → http://{}/{}/", APP_NAME, APP_VERSION, addr, uuid);
+    println!(
+        "\n✅ {} v{} uruchomiony → http://{}/{}/",
+        APP_NAME, APP_VERSION, addr, uuid
+    );
 
     axum::serve(
         listener,

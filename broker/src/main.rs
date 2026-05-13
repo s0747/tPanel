@@ -2,17 +2,16 @@ mod broker;
 mod config;
 mod forward;
 
-use tracing::{info, error};
-use tracing_subscriber::EnvFilter;
 use config::Config;
+use tracing::{error, info};
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
     // Inicjalizacja logowania — poziom kontrolowany przez RUST_LOG
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"))
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .init();
 
@@ -20,11 +19,28 @@ async fn main() {
 
     info!("🔧 mqtt-broker konfiguracja:");
     info!("   MQTT_TCP_ADDR              = {}", cfg.mqtt_tcp_addr);
-    info!("   MQTT_TLS_ADDR              = {}", if cfg.tls_enabled()  { &cfg.mqtt_tls_addr  } else { "(wyłączony)" });
-    info!("   MQTT_QUIC_ADDR             = {}", if cfg.quic_enabled() { &cfg.mqtt_quic_addr } else { "(wyłączony)" });
+    info!(
+        "   MQTT_TLS_ADDR              = {}",
+        if cfg.tls_enabled() {
+            &cfg.mqtt_tls_addr
+        } else {
+            "(wyłączony)"
+        }
+    );
+    info!(
+        "   MQTT_QUIC_ADDR             = {}",
+        if cfg.quic_enabled() {
+            &cfg.mqtt_quic_addr
+        } else {
+            "(wyłączony)"
+        }
+    );
     info!("   BRIDGE_TOPIC               = {}", cfg.bridge_topic);
     info!("   BRIDGE_TARGET_URL          = {}", cfg.bridge_target_url);
-    info!("   BRIDGE_SENSOR_ID_FROM_TOPIC= {}", cfg.bridge_sensor_id_from_topic);
+    info!(
+        "   BRIDGE_SENSOR_ID_FROM_TOPIC= {}",
+        cfg.bridge_sensor_id_from_topic
+    );
     info!("   BRIDGE_CLIENT_ID           = {}", cfg.bridge_client_id);
 
     // ── Kanał broker → bridge (bufor 256 wiadomości) ──────────────────────────
@@ -40,8 +56,8 @@ async fn main() {
     };
 
     // ── Uruchom bridge jako osobny task ───────────────────────────────────────
-    let bridge_target  = cfg.bridge_target_url.clone();
-    let bridge_flag    = cfg.bridge_sensor_id_from_topic;
+    let bridge_target = cfg.bridge_target_url.clone();
+    let bridge_flag = cfg.bridge_sensor_id_from_topic;
     let bridge_default = cfg.bridge_default_sensor_id.clone();
 
     tokio::spawn(async move {
@@ -50,8 +66,8 @@ async fn main() {
 
     // ── Bridge subskrybuje lokalny broker ─────────────────────────────────────
     // Subskrybent wewnętrzny — łączy się z własnym brokerem przez TCP
-    let bridge_topic    = cfg.bridge_topic.clone();
-    let bridge_addr     = cfg.mqtt_tcp_addr.clone();
+    let bridge_topic = cfg.bridge_topic.clone();
+    let bridge_addr = cfg.mqtt_tcp_addr.clone();
     let bridge_client_id = cfg.bridge_client_id.clone();
 
     tokio::spawn(async move {
@@ -72,13 +88,16 @@ async fn main() {
                     // który ma bezpośredni dostęp do kanału forward_tx.
                     // Subskrypcja bridge klienta jest potrzebna żeby broker
                     // dostarczał wiadomości do handlera.
-                    if let Err(e) = client.subscribe(&bridge_topic, |msg| {
-                        tracing::debug!(
-                            "[bridge-sub] temat={} payload={} bajtów",
-                            msg.topic,
-                            msg.payload.len()
-                        );
-                    }).await {
+                    if let Err(e) = client
+                        .subscribe(&bridge_topic, |msg| {
+                            tracing::debug!(
+                                "[bridge-sub] temat={} payload={} bajtów",
+                                msg.topic,
+                                msg.payload.len()
+                            );
+                        })
+                        .await
+                    {
                         tracing::warn!("[bridge-sub] Błąd subskrypcji: {e}");
                     }
                     break;
@@ -94,8 +113,12 @@ async fn main() {
     // ── Główna pętla brokera — blokuje do sygnału shutdown ───────────────────
     info!("\n✅ mqtt-broker gotowy");
     info!("   📡 TCP:  mqtt://{}", cfg.mqtt_tcp_addr);
-    if cfg.tls_enabled()  { info!("   🔒 TLS:  mqtts://{}", cfg.mqtt_tls_addr);  }
-    if cfg.quic_enabled() { info!("   ⚡ QUIC: quic://{}", cfg.mqtt_quic_addr); }
+    if cfg.tls_enabled() {
+        info!("   🔒 TLS:  mqtts://{}", cfg.mqtt_tls_addr);
+    }
+    if cfg.quic_enabled() {
+        info!("   ⚡ QUIC: quic://{}", cfg.mqtt_quic_addr);
+    }
     info!("   🌉 Bridge → {}", cfg.bridge_target_url);
 
     tokio::select! {

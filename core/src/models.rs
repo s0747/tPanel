@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 /// Punkt pomiarowy z tematu MQTT
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reading {
-    pub ts:       f64,
-    pub temp:     f64,
+    pub ts: f64,
+    pub temp: f64,
     pub humidity: f64,
 }
 
@@ -12,19 +12,19 @@ pub struct Reading {
 #[derive(Debug, Clone)]
 pub struct ReadingRecord {
     pub sensor_id: String,
-    pub ts:        f64,
-    pub temp:      f64,
-    pub humidity:  f64,
+    pub ts: f64,
+    pub temp: f64,
+    pub humidity: f64,
 }
 
 /// Odpowiedź HTTP GET /api/range
 #[derive(Debug, Serialize)]
 pub struct RangeResponse {
-    pub from:      f64,
-    pub to:        f64,
+    pub from: f64,
+    pub to: f64,
     pub sensor_id: Option<String>,
-    pub count:     usize,
-    pub points:    Vec<Reading>,
+    pub count: usize,
+    pub points: Vec<Reading>,
 }
 
 /// Wyciąga sensor_id z nazwy topicu.

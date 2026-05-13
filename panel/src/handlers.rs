@@ -1,7 +1,7 @@
 use axum::{
     extract::{Query, State},
-    response::{Html, Sse},
     response::sse::{Event, KeepAlive},
+    response::{Html, Sse},
 };
 use serde::Deserialize;
 use std::convert::Infallible;
@@ -23,7 +23,7 @@ pub async fn index_handler(State(state): State<AppState>) -> Html<String> {
 #[derive(Deserialize)]
 pub struct SseParams {
     pub from: Option<f64>,
-    pub to:   Option<f64>,
+    pub to: Option<f64>,
 }
 
 /// SSE handler — dwufazowy strumień:
@@ -37,7 +37,6 @@ pub async fn sse_handler(
     State(state): State<AppState>,
     Query(params): Query<SseParams>,
 ) -> Sse<impl futures::Stream<Item = Result<Event, Infallible>>> {
-
     let stream = async_stream::stream! {
 
         // ── Faza 1: replay z bazy ─────────────────────────────────────────────

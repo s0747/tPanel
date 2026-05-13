@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize)]
 pub struct SensorReading {
     /// Timestamp Unix — opcjonalny, gateway uzupełnia now()
-    pub ts:       Option<f64>,
+    pub ts: Option<f64>,
     /// Temperatura w °C
-    pub temp:     f64,
+    pub temp: f64,
     /// Wilgotność w %
     pub humidity: f64,
 }
@@ -14,16 +14,16 @@ pub struct SensorReading {
 /// Payload publikowany na MQTT
 #[derive(Debug, Serialize)]
 pub struct MqttPayload {
-    pub ts:       f64,
-    pub temp:     f64,
+    pub ts: f64,
+    pub temp: f64,
     pub humidity: f64,
 }
 
 impl SensorReading {
     pub fn into_mqtt_payload(self) -> MqttPayload {
         MqttPayload {
-            ts:       self.ts.filter(|t| t.is_finite()).unwrap_or_else(now_secs),
-            temp:     round1(self.temp),
+            ts: self.ts.filter(|t| t.is_finite()).unwrap_or_else(now_secs),
+            temp: round1(self.temp),
             humidity: round1(self.humidity),
         }
     }

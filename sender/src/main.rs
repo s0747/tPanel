@@ -4,7 +4,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 // ─── Konfiguracja ─────────────────────────────────────────────────────────────
 
 struct Config {
-    url:       String,
+    url: String,
     sensor_id: String,
 }
 
@@ -12,7 +12,7 @@ impl Config {
     fn from_env() -> Self {
         let _ = dotenvy::dotenv();
         Self {
-            url:       env_str("SENDER_URL",       "http://localhost:3000/default/"),
+            url: env_str("SENDER_URL", "http://localhost:3000/default/"),
             sensor_id: env_str("SENDER_SENSOR_ID", "sender-01"),
         }
     }
@@ -23,9 +23,9 @@ impl Config {
 #[derive(Serialize)]
 struct Reading {
     sensor_id: String,
-    ts:        f64,
-    temp:      f64,
-    humidity:  f64,
+    ts: f64,
+    temp: f64,
+    humidity: f64,
 }
 
 // ─── Parsowanie linii ze stdin ────────────────────────────────────────────────
@@ -77,14 +77,14 @@ async fn send_reading(client: &reqwest::Client, cfg: &Config, reading: &Reading)
 
 #[tokio::main]
 async fn main() {
-    let cfg    = Config::from_env();
+    let cfg = Config::from_env();
     let client = reqwest::Client::new();
 
     eprintln!("sender: url={}  sensor_id={}", cfg.url, cfg.sensor_id);
     eprintln!("sender: czekam na dane ze stdin (generator | sender)...");
 
     // Czytaj stdin linia po linii asynchronicznie
-    let stdin  = tokio::io::stdin();
+    let stdin = tokio::io::stdin();
     let reader = BufReader::new(stdin);
     let mut lines = reader.lines();
 
@@ -92,13 +92,15 @@ async fn main() {
         match lines.next_line().await {
             Ok(Some(line)) => {
                 let line = line.trim().to_owned();
-                if line.is_empty() { continue; }
+                if line.is_empty() {
+                    continue;
+                }
 
                 match parse_line(&line) {
                     Some((temp, humidity)) => {
                         let reading = Reading {
                             sensor_id: cfg.sensor_id.clone(),
-                            ts:        now_secs(),
+                            ts: now_secs(),
                             temp,
                             humidity,
                         };

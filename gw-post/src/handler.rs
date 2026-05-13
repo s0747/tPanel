@@ -15,7 +15,7 @@ use crate::mqtt::{self, MqttError};
 /// Stan Axum
 #[derive(Clone)]
 pub struct GwState {
-    pub cfg:       Arc<Config>,
+    pub cfg: Arc<Config>,
     pub blacklist: Arc<Blacklist>,
 }
 
@@ -39,7 +39,7 @@ pub async fn ingest(
     Path(uuid): Path<String>,
     Json(reading): Json<SensorReading>,
 ) -> impl IntoResponse {
-    let ip  = addr.ip();
+    let ip = addr.ip();
     let cfg = &state.cfg;
 
     // ── Sprawdź blacklistę ────────────────────────────────────────────────
@@ -52,24 +52,30 @@ pub async fn ingest(
     if reading.temp < cfg.temp_min || reading.temp > cfg.temp_max {
         return (
             StatusCode::UNPROCESSABLE_ENTITY,
-            format!("temp {:.1} poza zakresem [{}, {}]",
-                reading.temp, cfg.temp_min, cfg.temp_max),
-        ).into_response();
+            format!(
+                "temp {:.1} poza zakresem [{}, {}]",
+                reading.temp, cfg.temp_min, cfg.temp_max
+            ),
+        )
+            .into_response();
     }
 
     if reading.humidity < cfg.humidity_min || reading.humidity > cfg.humidity_max {
         return (
             StatusCode::UNPROCESSABLE_ENTITY,
-            format!("humidity {:.1} poza zakresem [{}, {}]",
-                reading.humidity, cfg.humidity_min, cfg.humidity_max),
-        ).into_response();
+            format!(
+                "humidity {:.1} poza zakresem [{}, {}]",
+                reading.humidity, cfg.humidity_min, cfg.humidity_max
+            ),
+        )
+            .into_response();
     }
 
     // ── Przygotuj topic i payload ──────────────────────────────────────────
-    let topic   = cfg.topic(&uuid);
+    let topic = cfg.topic(&uuid);
     let payload = reading.into_mqtt_payload();
     let payload_str = match serde_json::to_string(&payload) {
-        Ok(s)  => s,
+        Ok(s) => s,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     };
 
@@ -77,8 +83,10 @@ pub async fn ingest(
     match mqtt::publish_with_auth(&cfg.mqtt_broker_url, &uuid, &topic, &payload_str).await {
         Ok(_) => {
             state.blacklist.record_success(ip);
-            info!("✓ PUBLISH topic='{}' ip={} temp={:.1}°C humidity={:.1}%",
-                topic, ip, payload.temp, payload.humidity);
+            info!(
+                "✓ PUBLISH topic='{}' ip={} temp={:.1}°C humidity={:.1}%",
+                topic, ip, payload.temp, payload.humidity
+            );
             StatusCode::CREATED.into_response()
         }
         Err(MqttError::Auth(e)) => {

@@ -1,11 +1,11 @@
 use mqtt5::MqttClient;
 use sqlx::SqlitePool;
 use std::sync::Arc;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 use crate::config::Config;
 use crate::db;
-use crate::models::{Reading, ReadingRecord, sensor_id_from_topic};
+use crate::models::{sensor_id_from_topic, Reading, ReadingRecord};
 
 /// Łączy się z brokerem i subskrybuje topic czujników.
 /// Przy każdej wiadomości parsuje payload i zapisuje do SQLite.
@@ -16,7 +16,7 @@ pub async fn run(cfg: Arc<Config>, pool: Arc<SqlitePool>) {
 
         // ── Połączenie ────────────────────────────────────────────────────
         match client.connect(&cfg.mqtt_broker_url).await {
-            Ok(_)  => info!("📡 MQTT połączono: {}", cfg.mqtt_broker_url),
+            Ok(_) => info!("📡 MQTT połączono: {}", cfg.mqtt_broker_url),
             Err(e) => {
                 warn!("⚠️  MQTT błąd połączenia: {e} — retry za 3s");
                 tokio::time::sleep(std::time::Duration::from_secs(3)).await;
@@ -26,10 +26,10 @@ pub async fn run(cfg: Arc<Config>, pool: Arc<SqlitePool>) {
 
         // ── Subskrypcja ───────────────────────────────────────────────────
         let pool_sub = pool.clone();
-        let result   = client
+        let result = client
             .subscribe(&cfg.mqtt_topic, move |msg| {
-                let pool    = pool_sub.clone();
-                let topic   = msg.topic.clone();
+                let pool = pool_sub.clone();
+                let topic = msg.topic.clone();
                 let payload = msg.payload.clone();
                 tokio::spawn(async move {
                     handle_message(&pool, &topic, &payload).await;
@@ -38,7 +38,7 @@ pub async fn run(cfg: Arc<Config>, pool: Arc<SqlitePool>) {
             .await;
 
         match result {
-            Ok(_)  => info!("📋 Subskrybuję: {}", cfg.mqtt_topic),
+            Ok(_) => info!("📋 Subskrybuję: {}", cfg.mqtt_topic),
             Err(e) => {
                 error!("❌ Błąd subskrypcji: {e} — retry za 3s");
                 tokio::time::sleep(std::time::Duration::from_secs(3)).await;
@@ -61,7 +61,7 @@ pub async fn run(cfg: Arc<Config>, pool: Arc<SqlitePool>) {
 /// Parsuje wiadomość MQTT i zapisuje do SQLite.
 async fn handle_message(pool: &SqlitePool, topic: &str, payload: &[u8]) {
     let reading: Reading = match serde_json::from_slice(payload) {
-        Ok(r)  => r,
+        Ok(r) => r,
         Err(e) => {
             warn!("Pominięto wiadomość z topic '{}' — błąd JSON: {e}", topic);
             return;
@@ -69,19 +69,22 @@ async fn handle_message(pool: &SqlitePool, topic: &str, payload: &[u8]) {
     };
 
     if !reading.ts.is_finite() || !reading.temp.is_finite() || !reading.humidity.is_finite() {
-        warn!("Pominięto wiadomość z topic '{}' — wartości nie są skończone", topic);
+        warn!(
+            "Pominięto wiadomość z topic '{}' — wartości nie są skończone",
+            topic
+        );
         return;
     }
 
     let rec = ReadingRecord {
         sensor_id: sensor_id_from_topic(topic),
-        ts:        reading.ts,
-        temp:      reading.temp,
-        humidity:  reading.humidity,
+        ts: reading.ts,
+        temp: reading.temp,
+        humidity: reading.humidity,
     };
 
     match db::insert(pool, &rec).await {
-        Ok(_)  => info!(
+        Ok(_) => info!(
             "💾 Zapisano: sensor={} ts={:.0} temp={:.1}°C humidity={:.1}%",
             rec.sensor_id, rec.ts, rec.temp, rec.humidity
         ),

@@ -16,7 +16,7 @@ use crate::models::RangeResponse;
 /// Współdzielony stan Axum
 #[derive(Clone)]
 pub struct ApiState {
-    pub pool:       Arc<SqlitePool>,
+    pub pool: Arc<SqlitePool>,
     pub max_points: usize,
 }
 
@@ -24,7 +24,7 @@ pub struct ApiState {
 #[derive(Deserialize)]
 pub struct RangeParams {
     pub from: f64,
-    pub to:   Option<f64>,
+    pub to: Option<f64>,
 }
 
 // ─── Sensory ──────────────────────────────────────────────────────────────────
@@ -32,12 +32,10 @@ pub struct RangeParams {
 /// GET /api/sensors
 ///
 /// Zwraca listę wszystkich czujników zarejestrowanych w bazie.
-pub async fn sensors(
-    State(state): State<ApiState>,
-) -> impl IntoResponse {
+pub async fn sensors(State(state): State<ApiState>) -> impl IntoResponse {
     match db::list_sensors(&state.pool).await {
-        Ok(ids)  => Json(ids).into_response(),
-        Err(e)   => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        Ok(ids) => Json(ids).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
@@ -50,8 +48,8 @@ pub async fn sensor_info(
 ) -> impl IntoResponse {
     match db::sensor_info(&state.pool, &sensor_uuid).await {
         Ok(Some(info)) => Json(info).into_response(),
-        Ok(None)       => StatusCode::NOT_FOUND.into_response(),
-        Err(e)         => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
@@ -71,10 +69,18 @@ pub async fn sensor_range(
     let to = params.to.unwrap_or_else(now_secs);
 
     if !params.from.is_finite() || !to.is_finite() {
-        return (StatusCode::BAD_REQUEST, "from i to muszą być skończonymi liczbami").into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            "from i to muszą być skończonymi liczbami",
+        )
+            .into_response();
     }
     if params.from > to {
-        return (StatusCode::BAD_REQUEST, "from musi być mniejsze lub równe to").into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            "from musi być mniejsze lub równe to",
+        )
+            .into_response();
     }
 
     let limit = state.max_points as i64;
@@ -83,15 +89,19 @@ pub async fn sensor_range(
         Ok(points) => {
             let count = points.len();
             if count == limit as usize {
-                warn!("Wynik przycięty do {} punktów — rozważ zmniejszenie zakresu", limit);
+                warn!(
+                    "Wynik przycięty do {} punktów — rozważ zmniejszenie zakresu",
+                    limit
+                );
             }
             Json(RangeResponse {
-                from:      params.from,
+                from: params.from,
                 to,
                 sensor_id: Some(sensor_uuid.clone()),
                 count,
                 points,
-            }).into_response()
+            })
+            .into_response()
         }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
@@ -105,11 +115,9 @@ pub async fn sensor_latest(
     Path(sensor_uuid): Path<String>,
 ) -> impl IntoResponse {
     match db::load_range(&state.pool, 0.0, now_secs(), 1, Some(&sensor_uuid)).await {
-        Ok(points) if !points.is_empty() => {
-            Json(points.into_iter().last()).into_response()
-        }
-        Ok(_)    => StatusCode::NOT_FOUND.into_response(),
-        Err(e)   => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        Ok(points) if !points.is_empty() => Json(points.into_iter().last()).into_response(),
+        Ok(_) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
@@ -124,12 +132,15 @@ pub async fn panel_sensors(
 ) -> impl IntoResponse {
     match db::list_panel_sensors(&state.pool, &panel_uuid).await {
         Ok(sensors) => {
-            let body: Vec<serde_json::Value> = sensors.into_iter().map(|s| {
-                serde_json::json!({
-                    "sensor_uuid": s.sensor_uuid,
-                    "name":        s.name,
+            let body: Vec<serde_json::Value> = sensors
+                .into_iter()
+                .map(|s| {
+                    serde_json::json!({
+                        "sensor_uuid": s.sensor_uuid,
+                        "name":        s.name,
+                    })
                 })
-            }).collect();
+                .collect();
             Json(body).into_response()
         }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
@@ -152,7 +163,7 @@ pub async fn add_panel_sensor(
     let name = body["name"].as_str().map(str::to_owned);
 
     match db::add_panel_sensor(&state.pool, &panel_uuid, &sensor_uuid, name.as_deref()).await {
-        Ok(_)  => StatusCode::CREATED.into_response(),
+        Ok(_) => StatusCode::CREATED.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
@@ -165,7 +176,7 @@ pub async fn remove_panel_sensor(
     Path((panel_uuid, sensor_uuid)): Path<(String, String)>,
 ) -> impl IntoResponse {
     match db::remove_panel_sensor(&state.pool, &panel_uuid, &sensor_uuid).await {
-        Ok(_)  => StatusCode::NO_CONTENT.into_response(),
+        Ok(_) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }

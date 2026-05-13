@@ -1,9 +1,9 @@
 pub mod dashboard;
 pub mod layout;
 
-use maud::{DOCTYPE, html, Markup};
 use crate::config::{Config, APP_NAME, APP_VERSION};
 use crate::models::DataPoint;
+use maud::{html, Markup, DOCTYPE};
 
 /// Renderuje pełną stronę HTML z danymi historycznymi i konfiguracją
 pub fn page(history: &[DataPoint], cfg: &Config) -> Markup {

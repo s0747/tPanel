@@ -6,12 +6,12 @@ use std::time::Duration;
 // ─── Konfiguracja ─────────────────────────────────────────────────────────────
 
 struct Config {
-    interval:      Duration,
-    temp_min:      f64,
-    temp_max:      f64,
-    humidity_min:  f64,
-    humidity_max:  f64,
-    temp_step:     f64,
+    interval: Duration,
+    temp_min: f64,
+    temp_max: f64,
+    humidity_min: f64,
+    humidity_max: f64,
+    temp_step: f64,
     humidity_step: f64,
 }
 
@@ -20,18 +20,22 @@ impl Config {
         let _ = dotenvy::dotenv();
         let interval_secs = env_f64("GENERATOR_INTERVAL", 2.0);
         Self {
-            interval:      Duration::from_secs_f64(interval_secs),
-            temp_min:      env_f64("TEMP_MIN",      15.0),
-            temp_max:      env_f64("TEMP_MAX",      35.0),
-            humidity_min:  env_f64("HUMIDITY_MIN",  20.0),
-            humidity_max:  env_f64("HUMIDITY_MAX",  90.0),
-            temp_step:     env_f64("TEMP_STEP",      0.5),
-            humidity_step: env_f64("HUMIDITY_STEP",  1.0),
+            interval: Duration::from_secs_f64(interval_secs),
+            temp_min: env_f64("TEMP_MIN", 15.0),
+            temp_max: env_f64("TEMP_MAX", 35.0),
+            humidity_min: env_f64("HUMIDITY_MIN", 20.0),
+            humidity_max: env_f64("HUMIDITY_MAX", 90.0),
+            temp_step: env_f64("TEMP_STEP", 0.5),
+            humidity_step: env_f64("HUMIDITY_STEP", 1.0),
         }
     }
 
-    fn temp_mid(&self)     -> f64 { (self.temp_min     + self.temp_max)     / 2.0 }
-    fn humidity_mid(&self) -> f64 { (self.humidity_min + self.humidity_max) / 2.0 }
+    fn temp_mid(&self) -> f64 {
+        (self.temp_min + self.temp_max) / 2.0
+    }
+    fn humidity_mid(&self) -> f64 {
+        (self.humidity_min + self.humidity_max) / 2.0
+    }
 }
 
 // ─── Generowanie wartości ─────────────────────────────────────────────────────
@@ -49,22 +53,29 @@ fn round1(v: f64) -> f64 {
 
 #[tokio::main]
 async fn main() {
-    let cfg    = Config::from_env();
+    let cfg = Config::from_env();
     let stdout = io::stdout();
 
-    let mut temp     = cfg.temp_mid();
+    let mut temp = cfg.temp_mid();
     let mut humidity = cfg.humidity_mid();
 
     eprintln!(
         "generator: interval={:.1}s  temp={:.1}–{:.1}°C  humidity={:.1}–{:.1}%",
         cfg.interval.as_secs_f64(),
-        cfg.temp_min, cfg.temp_max,
-        cfg.humidity_min, cfg.humidity_max,
+        cfg.temp_min,
+        cfg.temp_max,
+        cfg.humidity_min,
+        cfg.humidity_max,
     );
 
     loop {
-        temp     = round1(walk(temp,     cfg.temp_step,     cfg.temp_min,     cfg.temp_max));
-        humidity = round1(walk(humidity, cfg.humidity_step, cfg.humidity_min, cfg.humidity_max));
+        temp = round1(walk(temp, cfg.temp_step, cfg.temp_min, cfg.temp_max));
+        humidity = round1(walk(
+            humidity,
+            cfg.humidity_step,
+            cfg.humidity_min,
+            cfg.humidity_max,
+        ));
 
         {
             let mut out = stdout.lock();

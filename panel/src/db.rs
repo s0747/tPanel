@@ -1,6 +1,6 @@
-use sqlx::{SqlitePool, sqlite::SqlitePoolOptions, Row};
 use crate::config::Config;
 use crate::models::DataPoint;
+use sqlx::{sqlite::SqlitePoolOptions, Row, SqlitePool};
 
 /// Inicjalizuje pulę połączeń i uruchamia migracje SQL.
 pub async fn init_pool(cfg: &Config) -> Result<SqlitePool, sqlx::Error> {
@@ -34,23 +34,18 @@ pub async fn insert_reading(
     sensor_id: &str,
     point: &DataPoint,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "INSERT INTO readings (sensor_id, ts, temp, humidity) VALUES (?, ?, ?, ?)",
-    )
-    .bind(sensor_id)
-    .bind(point.ts)
-    .bind(point.temp)
-    .bind(point.humidity)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO readings (sensor_id, ts, temp, humidity) VALUES (?, ?, ?, ?)")
+        .bind(sensor_id)
+        .bind(point.ts)
+        .bind(point.temp)
+        .bind(point.humidity)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 
 /// Ładuje ostatnie `limit` odczytów z bazy, posortowanych od najstarszego.
-pub async fn load_recent(
-    pool: &SqlitePool,
-    limit: usize,
-) -> Result<Vec<DataPoint>, sqlx::Error> {
+pub async fn load_recent(pool: &SqlitePool, limit: usize) -> Result<Vec<DataPoint>, sqlx::Error> {
     let limit = limit as i64;
 
     let rows = sqlx::query(
@@ -72,8 +67,8 @@ pub async fn load_recent(
     Ok(rows
         .into_iter()
         .map(|r| DataPoint {
-            ts:       r.get::<f64, _>("ts"),
-            temp:     r.get::<f64, _>("temp"),
+            ts: r.get::<f64, _>("ts"),
+            temp: r.get::<f64, _>("temp"),
             humidity: r.get::<f64, _>("humidity"),
         })
         .collect())
@@ -82,9 +77,9 @@ pub async fn load_recent(
 /// Ładuje punkty z bazy w zakresie czasowym [from, to].
 /// Wyniki posortowane od najstarszego (ASC).
 pub async fn load_range(
-    pool:  &SqlitePool,
-    from:  f64,
-    to:    f64,
+    pool: &SqlitePool,
+    from: f64,
+    to: f64,
 ) -> Result<Vec<DataPoint>, sqlx::Error> {
     let rows = sqlx::query(
         "SELECT ts, temp, humidity
@@ -100,8 +95,8 @@ pub async fn load_range(
     Ok(rows
         .into_iter()
         .map(|r| DataPoint {
-            ts:       r.get::<f64, _>("ts"),
-            temp:     r.get::<f64, _>("temp"),
+            ts: r.get::<f64, _>("ts"),
+            temp: r.get::<f64, _>("temp"),
             humidity: r.get::<f64, _>("humidity"),
         })
         .collect())

@@ -6,25 +6,22 @@ use tracing::error;
 /// Zwraca Err jeśli połączenie lub publikacja nie powiedzie się.
 pub async fn publish_with_auth(
     broker_url: &str,
-    uuid:       &str,
-    topic:      &str,
-    payload:    &str,
+    uuid: &str,
+    topic: &str,
+    payload: &str,
 ) -> Result<(), MqttError> {
     // Client ID unikalny per request — UUID + timestamp
     let client_id = format!("{}-{}", uuid, now_millis());
-    let client    = MqttClient::new(&client_id);
+    let client = MqttClient::new(&client_id);
 
     // URL z credentials: mqtt://uuid@host:port
     // mqtt5 obsługuje username w URL lub przez opcje połączenia
     let url_with_auth = build_url(broker_url, uuid);
 
-    client
-        .connect(&url_with_auth)
-        .await
-        .map_err(|e| {
-            // Błąd połączenia — najprawdopodobniej auth failure
-            MqttError::Auth(e.to_string())
-        })?;
+    client.connect(&url_with_auth).await.map_err(|e| {
+        // Błąd połączenia — najprawdopodobniej auth failure
+        MqttError::Auth(e.to_string())
+    })?;
 
     client
         .publish(topic, payload.as_bytes())

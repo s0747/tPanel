@@ -28,13 +28,13 @@ impl Config {
     pub fn from_env() -> Self {
         let _ = dotenvy::dotenv();
         Self {
-            bind_addr:          env_str("CORE_BIND_ADDR",      "0.0.0.0:4001"),
-            mqtt_broker_url:    env_str("CORE_MQTT_BROKER_URL","mqtt://localhost:1883"),
-            mqtt_client_id:     env_str("CORE_MQTT_CLIENT_ID", "archiver-01"),
-            mqtt_topic:         env_str("CORE_MQTT_TOPIC",     "sensors/#"),
-            db_path:            env_str("CORE_DB_PATH",        "./data/readings.db"),
-            db_max_connections: env_u32("CORE_DB_MAX_CONN",    5),
-            api_max_points:     env_usize("CORE_API_MAX_POINTS", 86400),
+            bind_addr: env_str("CORE_BIND_ADDR", "0.0.0.0:4001"),
+            mqtt_broker_url: env_str("CORE_MQTT_BROKER_URL", "mqtt://localhost:1883"),
+            mqtt_client_id: env_str("CORE_MQTT_CLIENT_ID", "archiver-01"),
+            mqtt_topic: env_str("CORE_MQTT_TOPIC", "sensors/#"),
+            db_path: env_str("CORE_DB_PATH", "./data/readings.db"),
+            db_max_connections: env_u32("CORE_DB_MAX_CONN", 5),
+            api_max_points: env_usize("CORE_API_MAX_POINTS", 86400),
         }
     }
 }
@@ -44,9 +44,15 @@ fn env_str(key: &str, default: &str) -> String {
 }
 
 fn env_u32(key: &str, default: u32) -> u32 {
-    env::var(key).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+    env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
 }
 
 fn env_usize(key: &str, default: usize) -> usize {
-    env::var(key).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+    env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
 }

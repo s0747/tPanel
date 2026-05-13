@@ -4,20 +4,19 @@ mod db;
 mod models;
 mod subscriber;
 
+use axum::{routing::get, Router};
 use std::sync::Arc;
-use axum::{Router, routing::get};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-use config::Config;
 use api::ApiState;
+use config::Config;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"))
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .init();
 
@@ -32,16 +31,14 @@ async fn main() {
     info!("   CORE_API_MAX_POINTS   = {}", cfg.api_max_points);
 
     // ── Inicjalizacja SQLite ──────────────────────────────────────────────
-    let pool = Arc::new(
-        db::init_pool(&cfg).await.unwrap_or_else(|e| {
-            eprintln!("❌ Błąd inicjalizacji SQLite: {e}");
-            std::process::exit(1);
-        })
-    );
+    let pool = Arc::new(db::init_pool(&cfg).await.unwrap_or_else(|e| {
+        eprintln!("❌ Błąd inicjalizacji SQLite: {e}");
+        std::process::exit(1);
+    }));
 
     // ── MQTT subscriber jako osobny task ──────────────────────────────────
     {
-        let cfg_sub  = cfg.clone();
+        let cfg_sub = cfg.clone();
         let pool_sub = pool.clone();
         tokio::spawn(async move {
             subscriber::run(cfg_sub, pool_sub).await;
@@ -50,32 +47,31 @@ async fn main() {
 
     // ── HTTP API ──────────────────────────────────────────────────────────
     let api_state = ApiState {
-        pool:       pool.clone(),
+        pool: pool.clone(),
         max_points: cfg.api_max_points,
     };
 
     let app = Router::new()
         // Sensory
-        .route("/api/sensors",
-            get(api::sensors))
-        .route("/api/sensors/:sensor_uuid",
-            get(api::sensor_info))
-        .route("/api/sensors/:sensor_uuid/range",
-            get(api::sensor_range))
-        .route("/api/sensors/:sensor_uuid/latest",
-            get(api::sensor_latest))
+        .route("/api/sensors", get(api::sensors))
+        .route("/api/sensors/:sensor_uuid", get(api::sensor_info))
+        .route("/api/sensors/:sensor_uuid/range", get(api::sensor_range))
+        .route("/api/sensors/:sensor_uuid/latest", get(api::sensor_latest))
         // Panele
-        .route("/api/panels/:panel_uuid/sensors",
-            get(api::panel_sensors).post(api::add_panel_sensor))
-        .route("/api/panels/:panel_uuid/sensors/:sensor_uuid",
-            axum::routing::delete(api::remove_panel_sensor))
+        .route(
+            "/api/panels/:panel_uuid/sensors",
+            get(api::panel_sensors).post(api::add_panel_sensor),
+        )
+        .route(
+            "/api/panels/:panel_uuid/sensors/:sensor_uuid",
+            axum::routing::delete(api::remove_panel_sensor),
+        )
         // Health
-        .route("/health",
-            get(api::health))
+        .route("/health", get(api::health))
         .with_state(api_state);
 
     let bind_addr = cfg.bind_addr.clone();
-    let listener  = tokio::net::TcpListener::bind(&bind_addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&bind_addr).await.unwrap();
 
     info!("\n✅ core uruchomiony → http://{}", bind_addr);
     info!("   GET    /api/sensors                              — lista czujników");

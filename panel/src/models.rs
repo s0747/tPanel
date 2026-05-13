@@ -1,12 +1,12 @@
-use std::sync::{Arc, Mutex};
-use sqlx::SqlitePool;
 use crate::config::Config;
+use sqlx::SqlitePool;
+use std::sync::{Arc, Mutex};
 
 /// Pojedynczy punkt pomiarowy (używany w historii w pamięci i SSE)
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct DataPoint {
-    pub ts:       f64, // timestamp Unix w sekundach
-    pub temp:     f64, // temperatura °C
+    pub ts: f64,       // timestamp Unix w sekundach
+    pub temp: f64,     // temperatura °C
     pub humidity: f64, // wilgotność %
 }
 
@@ -42,7 +42,7 @@ impl SensorReading {
         });
         DataPoint {
             ts,
-            temp:     (self.temp     * 10.0).round() / 10.0,
+            temp: (self.temp * 10.0).round() / 10.0,
             humidity: (self.humidity * 10.0).round() / 10.0,
         }
     }
@@ -51,16 +51,16 @@ impl SensorReading {
 /// Współdzielony stan aplikacji przekazywany przez Axum
 #[derive(Clone)]
 pub struct AppState {
-    pub history:  Arc<Mutex<Vec<DataPoint>>>,
-    pub config:   Arc<Config>,
-    pub db_pool:  Option<SqlitePool>,
+    pub history: Arc<Mutex<Vec<DataPoint>>>,
+    pub config: Arc<Config>,
+    pub db_pool: Option<SqlitePool>,
 }
 
 impl AppState {
     pub fn new(config: Config, db_pool: Option<SqlitePool>) -> Self {
         Self {
-            history:  Arc::new(Mutex::new(Vec::new())),
-            config:   Arc::new(config),
+            history: Arc::new(Mutex::new(Vec::new())),
+            config: Arc::new(config),
             db_pool,
         }
     }

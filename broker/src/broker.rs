@@ -1,8 +1,10 @@
-use mqtt5::broker::{BrokerConfig, BrokerEventHandler, ClientPublishEvent, MqttBroker, PublishAction};
-use mqtt5::broker::config::{TlsConfig, QuicConfig};
+use mqtt5::broker::config::{QuicConfig, TlsConfig};
+use mqtt5::broker::{
+    BrokerConfig, BrokerEventHandler, ClientPublishEvent, MqttBroker, PublishAction,
+};
+use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
-use std::future::Future;
 use std::sync::Arc;
 use tracing::{info, warn};
 

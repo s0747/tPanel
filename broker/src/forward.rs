@@ -1,14 +1,14 @@
 use reqwest::Client;
 use serde::Serialize;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// Payload JSON wysyłany do weather-dashboard — identyczny z HTTP POST sendera
 #[derive(Serialize)]
 struct SensorReading {
     sensor_id: String,
-    ts:        f64,
-    temp:      f64,
-    humidity:  f64,
+    ts: f64,
+    temp: f64,
+    humidity: f64,
 }
 
 /// Typ aliasu dla nadawcy kanału forward
@@ -41,39 +41,44 @@ fn parse_payload(
         .map_err(|e| warn!("Błąd parsowania JSON z topic '{}': {e}", topic))
         .ok()?;
 
-    let temp     = value["temp"].as_f64()
+    let temp = value["temp"]
+        .as_f64()
         .or_else(|| value["temperature"].as_f64())?;
-    let humidity = value["humidity"].as_f64()
+    let humidity = value["humidity"]
+        .as_f64()
         .or_else(|| value["hum"].as_f64())?;
 
     // ts: z payloadu lub now()
-    let ts = value["ts"].as_f64()
+    let ts = value["ts"]
+        .as_f64()
         .or_else(|| value["timestamp"].as_f64())
         .unwrap_or_else(now_secs);
 
     // sensor_id: z topicu lub z payloadu lub domyślny
     let sensor_id = if sensor_id_from_topic_flag {
-        sensor_id_from_topic(topic)
-            .unwrap_or_else(|| {
-                value["sensor_id"].as_str()
-                    .unwrap_or(default_sensor_id)
-                    .to_owned()
-            })
+        sensor_id_from_topic(topic).unwrap_or_else(|| {
+            value["sensor_id"]
+                .as_str()
+                .unwrap_or(default_sensor_id)
+                .to_owned()
+        })
     } else {
-        value["sensor_id"].as_str()
+        value["sensor_id"]
+            .as_str()
             .unwrap_or(default_sensor_id)
             .to_owned()
     };
 
-    Some(SensorReading { sensor_id, ts, temp, humidity })
+    Some(SensorReading {
+        sensor_id,
+        ts,
+        temp,
+        humidity,
+    })
 }
 
 /// Wysyła odczyt do weather-dashboard przez HTTP POST.
-async fn forward_reading(
-    client: &Client,
-    target_url: &str,
-    reading: &SensorReading,
-) {
+async fn forward_reading(client: &Client, target_url: &str, reading: &SensorReading) {
     match client.post(target_url).json(reading).send().await {
         Ok(resp) => {
             let status = resp.status();
@@ -103,10 +108,15 @@ pub async fn run_bridge(
     info!("[bridge] Uruchomiony → {}", target_url);
 
     while let Some(event) = rx.recv().await {
-        let topic   = &event.topic;
+        let topic = &event.topic;
         let payload = &event.payload;
 
-        match parse_payload(payload, topic, sensor_id_from_topic_flag, &default_sensor_id) {
+        match parse_payload(
+            payload,
+            topic,
+            sensor_id_from_topic_flag,
+            &default_sensor_id,
+        ) {
             Some(reading) => {
                 forward_reading(&client, &target_url, &reading).await;
             }

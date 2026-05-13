@@ -1,4 +1,4 @@
-use sqlx::{SqlitePool, sqlite::SqlitePoolOptions, Row};
+use sqlx::{sqlite::SqlitePoolOptions, Row, SqlitePool};
 use tracing::info;
 
 use crate::config::Config;
@@ -27,15 +27,13 @@ pub async fn init_pool(cfg: &Config) -> Result<SqlitePool, sqlx::Error> {
 
 /// Zapisuje odczyt do bazy.
 pub async fn insert(pool: &SqlitePool, rec: &ReadingRecord) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "INSERT INTO readings (sensor_id, ts, temp, humidity) VALUES (?, ?, ?, ?)",
-    )
-    .bind(&rec.sensor_id)
-    .bind(rec.ts)
-    .bind(rec.temp)
-    .bind(rec.humidity)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO readings (sensor_id, ts, temp, humidity) VALUES (?, ?, ?, ?)")
+        .bind(&rec.sensor_id)
+        .bind(rec.ts)
+        .bind(rec.temp)
+        .bind(rec.humidity)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 
@@ -43,57 +41,63 @@ pub async fn insert(pool: &SqlitePool, rec: &ReadingRecord) -> Result<(), sqlx::
 /// Opcjonalnie filtruje po sensor_id.
 /// Wyniki posortowane ASC, max `limit` rekordów.
 pub async fn load_range(
-    pool:      &SqlitePool,
-    from:      f64,
-    to:        f64,
-    limit:     i64,
+    pool: &SqlitePool,
+    from: f64,
+    to: f64,
+    limit: i64,
     sensor_id: Option<&str>,
 ) -> Result<Vec<Reading>, sqlx::Error> {
     let rows = match sensor_id {
-        Some(id) => sqlx::query(
-            "SELECT ts, temp, humidity
+        Some(id) => {
+            sqlx::query(
+                "SELECT ts, temp, humidity
              FROM readings
              WHERE ts >= ? AND ts <= ? AND sensor_id = ?
              ORDER BY ts ASC
              LIMIT ?",
-        )
-        .bind(from)
-        .bind(to)
-        .bind(id)
-        .bind(limit)
-        .fetch_all(pool)
-        .await?,
+            )
+            .bind(from)
+            .bind(to)
+            .bind(id)
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
 
-        None => sqlx::query(
-            "SELECT ts, temp, humidity
+        None => {
+            sqlx::query(
+                "SELECT ts, temp, humidity
              FROM readings
              WHERE ts >= ? AND ts <= ?
              ORDER BY ts ASC
              LIMIT ?",
-        )
-        .bind(from)
-        .bind(to)
-        .bind(limit)
-        .fetch_all(pool)
-        .await?,
+            )
+            .bind(from)
+            .bind(to)
+            .bind(limit)
+            .fetch_all(pool)
+            .await?
+        }
     };
 
-    Ok(rows.into_iter().map(|r| Reading {
-        ts:       r.get::<f64, _>("ts"),
-        temp:     r.get::<f64, _>("temp"),
-        humidity: r.get::<f64, _>("humidity"),
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| Reading {
+            ts: r.get::<f64, _>("ts"),
+            temp: r.get::<f64, _>("temp"),
+            humidity: r.get::<f64, _>("humidity"),
+        })
+        .collect())
 }
 
 /// Zwraca listę unikalnych sensor_id z bazy.
 pub async fn list_sensors(pool: &SqlitePool) -> Result<Vec<String>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT DISTINCT sensor_id FROM readings ORDER BY sensor_id ASC",
-    )
-    .fetch_all(pool)
-    .await?;
+    let rows = sqlx::query("SELECT DISTINCT sensor_id FROM readings ORDER BY sensor_id ASC")
+        .fetch_all(pool)
+        .await?;
 
-    Ok(rows.into_iter()
+    Ok(rows
+        .into_iter()
         .map(|r| r.get::<String, _>("sensor_id"))
         .collect())
 }
@@ -101,7 +105,7 @@ pub async fn list_sensors(pool: &SqlitePool) -> Result<Vec<String>, sqlx::Error>
 /// Zwraca info o czujniku: liczba rekordów, ostatni odczyt.
 /// Zwraca None jeśli czujnik nie istnieje w bazie.
 pub async fn sensor_info(
-    pool:        &SqlitePool,
+    pool: &SqlitePool,
     sensor_uuid: &str,
 ) -> Result<Option<serde_json::Value>, sqlx::Error> {
     let row = sqlx::query(
@@ -137,12 +141,12 @@ pub async fn sensor_info(
 
 pub struct PanelSensor {
     pub sensor_uuid: String,
-    pub name:        Option<String>,
+    pub name: Option<String>,
 }
 
 /// Zwraca listę czujników przypisanych do panelu.
 pub async fn list_panel_sensors(
-    pool:       &SqlitePool,
+    pool: &SqlitePool,
     panel_uuid: &str,
 ) -> Result<Vec<PanelSensor>, sqlx::Error> {
     let rows = sqlx::query(
@@ -155,18 +159,21 @@ pub async fn list_panel_sensors(
     .fetch_all(pool)
     .await?;
 
-    Ok(rows.into_iter().map(|r| PanelSensor {
-        sensor_uuid: r.get::<String, _>("sensor_uuid"),
-        name:        r.get::<Option<String>, _>("name"),
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| PanelSensor {
+            sensor_uuid: r.get::<String, _>("sensor_uuid"),
+            name: r.get::<Option<String>, _>("name"),
+        })
+        .collect())
 }
 
 /// Dodaje czujnik do panelu. Ignoruje duplikaty.
 pub async fn add_panel_sensor(
-    pool:        &SqlitePool,
-    panel_uuid:  &str,
+    pool: &SqlitePool,
+    panel_uuid: &str,
     sensor_uuid: &str,
-    name:        Option<&str>,
+    name: Option<&str>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT OR IGNORE INTO panel_sensors (panel_uuid, sensor_uuid, name)
@@ -182,8 +189,8 @@ pub async fn add_panel_sensor(
 
 /// Usuwa czujnik z panelu.
 pub async fn remove_panel_sensor(
-    pool:        &SqlitePool,
-    panel_uuid:  &str,
+    pool: &SqlitePool,
+    panel_uuid: &str,
     sensor_uuid: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(

@@ -4,7 +4,6 @@ use std::env;
 #[derive(Debug, Clone)]
 pub struct Config {
     // ── Broker ────────────────────────────────────────────────────────────────
-
     /// Adres TCP brokera MQTT
     pub mqtt_tcp_addr: String,
 
@@ -21,7 +20,6 @@ pub struct Config {
     pub mqtt_quic_addr: String,
 
     // ── Bridge ────────────────────────────────────────────────────────────────
-
     /// Topic MQTT na który subskrybuje bridge (wildcard)
     /// Format: sensors/# lub sensors/+/data
     pub bridge_topic: String,
@@ -45,16 +43,16 @@ impl Config {
     pub fn from_env() -> Self {
         let _ = dotenvy::dotenv();
         Self {
-            mqtt_tcp_addr:  env_str("MQTT_TCP_ADDR",  "0.0.0.0:1883"),
-            mqtt_tls_addr:  env_str("MQTT_TLS_ADDR",  ""),
-            mqtt_tls_cert:  env_str("MQTT_TLS_CERT",  "certs/server.crt"),
-            mqtt_tls_key:   env_str("MQTT_TLS_KEY",   "certs/server.key"),
+            mqtt_tcp_addr: env_str("MQTT_TCP_ADDR", "0.0.0.0:1883"),
+            mqtt_tls_addr: env_str("MQTT_TLS_ADDR", ""),
+            mqtt_tls_cert: env_str("MQTT_TLS_CERT", "certs/server.crt"),
+            mqtt_tls_key: env_str("MQTT_TLS_KEY", "certs/server.key"),
             mqtt_quic_addr: env_str("MQTT_QUIC_ADDR", ""),
-            bridge_topic:                env_str("BRIDGE_TOPIC",       "sensors/#"),
-            bridge_target_url:           env_str("BRIDGE_TARGET_URL",  "http://localhost:3000/default/"),
+            bridge_topic: env_str("BRIDGE_TOPIC", "sensors/#"),
+            bridge_target_url: env_str("BRIDGE_TARGET_URL", "http://localhost:3000/default/"),
             bridge_sensor_id_from_topic: env_bool("BRIDGE_SENSOR_ID_FROM_TOPIC", true),
-            bridge_default_sensor_id:    env_str("BRIDGE_DEFAULT_SENSOR_ID", "mqtt-sensor"),
-            bridge_client_id:            env_str("BRIDGE_CLIENT_ID",  "mqtt-bridge-01"),
+            bridge_default_sensor_id: env_str("BRIDGE_DEFAULT_SENSOR_ID", "mqtt-sensor"),
+            bridge_client_id: env_str("BRIDGE_CLIENT_ID", "mqtt-bridge-01"),
         }
     }
 

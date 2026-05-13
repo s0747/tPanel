@@ -1,5 +1,5 @@
-use maud::{html, Markup, PreEscaped};
 use crate::config::Config;
+use maud::{html, Markup, PreEscaped};
 
 /// Dwa kafelki z bieżącymi wartościami temperatury i wilgotności
 pub fn metric_cards() -> Markup {
@@ -59,9 +59,7 @@ pub fn scripts(data_json: &str, cfg: &Config) -> Markup {
     // Budujemy tylko dwa przypisania; reszta logiki jest w static/dashboard.js
     let inline = format!(
         "window.INIT_DATA  = {};\nwindow.MAX_POINTS = {};\nwindow.SSE_URL = '/{}/sse';",
-        data_json,
-        cfg.chart_max_points,
-        cfg.uuid,
+        data_json, cfg.chart_max_points, cfg.uuid,
     );
 
     html! {
