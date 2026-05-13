@@ -7,7 +7,23 @@ IDEA:
 Simple system that can do three things:
 - collect metrics ( eg. os, i2c sensors, modbus devies, etc)and send to mqtt / api (sender)
 - receive sensor data from mqtt, store it (core) and show it (panel).
-
+---
+                ┌──────────────────────────────────────────┐
+                │  				  pub/sub 				   │
+                └──────────────────────────────────────────┘
+                     ▲				 │				│
+                     │   			 │				│
+                     │				 ▼				▼
+                ┌─────────┐     ┌─────────┐		┌─────────┐
+                │  sender │		│  core	  │	──►	│  panel  │
+                └─────────┘		└─────────┘		└─────────┘
+                	 ▲
+                	 │
+                	 │
+                ┌─────────┐                       
+                │  reader │                       
+                └─────────┘  
+---
 build: 
 ```
 cargo build --workspace --release
