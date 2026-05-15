@@ -108,8 +108,8 @@ mod tests {
         for _ in 0..1000 {
             let t = walk(25.0, 0.5, 15.0, 35.0);
             let h = walk(55.0, 1.0, 20.0, 90.0);
-            assert!(t >= 15.0 && t <= 35.0, "temp {t} poza zakresem");
-            assert!(h >= 20.0 && h <= 90.0, "humidity {h} poza zakresem");
+            assert!((15.00..=35.0).contains(&t), "temp {t} poza zakresem");
+            assert!((20.00..=90.00).contains(&h), "humidity {h} poza zakresem");
         }
     }
 

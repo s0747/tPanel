@@ -1,23 +1,76 @@
 # .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
+name: ci
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        types: [ opened, synchronize, reopened ]
+        branches:
+            - main
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    CAGO_TERM_COLOR: always
+    APP_USER: app
+    APP_USER_PWD: secret
+
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      
-      # Build all crates
-      - run: cargo build --workspace
-      
-      # Test all crates  
-      - run: cargo test --workspace
-      
-      # Check formatting
-      - run: cargo fmt --all --check
-      
-      # Lint with clippy
-      - run: cargo clippy --workspace -- -D warnings
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions-rs/toolchain@v1
+          with:
+            toolchain: stable
+
+        # Build all crates
+        - run: cargo build --workspace
+
+        # Test all crates
+        - run: cargo test --workspace
+
+        # Check formatting
+        - run: cargo fmt --all --check
+
+        # Lint with clippy
+        - run: cargo clippy --all-targets --all-features --workspace -- -D warnings
+
+    deny:
+      name: Cargo deny
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Install cargo-deny
+          uses: taiki-e/install-action@cargo-deny
+        - name: Run cargo deny
+          run: cargo deny check
+
+    coverage:
+      name: Cargo code coverage
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Install the Rust toolchain
+          uses: actions-rust-lang/setup-rust-toolchain@v1
+          with:
+            components: llvm-tools-preview
+
+        - name: Install cargo-llvm-cov
+          uses: taiki-e/install-action@cargo-llvm-cov
+
+        - name: Generate code coverage
+          run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+        - name: Generate report
+          run: cargo llvm-cov report --html --output-dir coverage
+
+        - uses: actions/upload-artifact@v4
+          with:
+            name: Coverage report
+            path: coverage/
