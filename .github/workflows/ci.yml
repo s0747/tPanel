@@ -1,5 +1,5 @@
 # .github/workflows/ci.yml
-name: ci
+name: tPanel build and test
 
 on:
     push:
@@ -47,7 +47,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: taiki-e/install-action
+            - uses: taiki-e/install-action@v2
               with:
                   tool: cargo-deny
 
