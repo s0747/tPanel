@@ -11,7 +11,7 @@ Simple system that can do three things:
 Dataflow:
 
 	┌───────────────────────────────────────────────────────────────┐
-    │  				  		 pub/sub (broker)				        │
+    │  				  			 pub/sub 				   		    │
     └───────────────────────────────────────────────────────────────┘
            ▲				 ▲				 │				 │
            │   			     │				 │  			 │
@@ -19,12 +19,12 @@ Dataflow:
     ┌─────────────┐   ┌─────────────┐	┌─────────┐	   ┌────────────┐
     │ mqtt sender │   │ http-bridge │	│  core   │───►│ http-panel │
     └─────────────┘   └─────────────┘	└─────────┘	   └────────────┘
-           ▲								 ▲
-           │							     │
-           │  								 ▼ 
-       ┌────────┐						 ┌────────┐			
-       │ reader │						 │   db   │
-       └────────┘						 └────────┘			
+           ▲
+           │
+           │   
+       ┌────────┐
+       │ reader │
+       └────────┘
 ---
 build: 
 ```
@@ -39,8 +39,8 @@ cd panel && cargo run --release
 
 ```
 #sender: new terminal; 
-cd sender && cargo build --release
- ../target/release/generator | cargo run --release
+cd sender
+../target/release/generator | cargo run --release
 ```
 
 watch:
