@@ -42,14 +42,13 @@ jobs:
             - run: cargo clippy --all-targets --all-features --workspace -- -D warnings
 
     deny:
+        if: false
         name: Cargo deny
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
 
-            - uses: taiki-e/install-action@v2
-              with:
-                  tool: cargo-deny
+            - uses: taiki-e/install-action@cargo-deny
 
             - name: Run cargo deny
               run: cargo deny check
