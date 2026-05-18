@@ -112,52 +112,49 @@ docker-clean:
 docker-debug:
     docker exec -it {{ project_name }}-dev sh
 
-# LOCAL DEV
-# Tracing with OpenTelemetry + Jaeger
-jaeger:
-    docker run --rm --name rustpulse-jaeger -p 16686:16686 -p 4317:4317 -e COLLECTOR_OTLP_ENABLED=true jaegertracing/all-in-one:latest
+# OLD LOCAL DEV
 
-backend:
-    sh -c 'i=0; while [ "$i" -lt 60 ]; do docker info >/dev/null 2>&1 && exit 0; i=$((i+1)); sleep 1; done; echo "Docker not ready" >&2; exit 1'
-    docker compose -f compose.yml up -d postgres
-    docker compose -f compose.yml ps
-    cargo run --bin rustpulse
+# jaeger:
+#     docker run --rm --name xxx-jaeger -p 16686:16686 -p 4317:4317 -e COLLECTOR_OTLP_ENABLED=true jaegertracing/all-in-one:latest
 
-jaeger-stop:
-    docker stop rustpulse-jaeger || true
+# backend:
+#     sh -c 'i=0; while [ "$i" -lt 60 ]; do docker info >/dev/null 2>&1 && exit 0; i=$((i+1)); sleep 1; done; echo "Docker not ready" >&2; exit 1'
+#     docker compose -f compose.yml up -d postgres
+#     docker compose -f compose.yml ps
+#     cargo run --bin core
 
-# Postgres via compose.yml
-docker-up:
-    docker compose -f compose.yml up -d
+# jaeger-stop:
+#     docker stop jaeger || true
 
-postgres-up:
-    docker compose -f compose.yml up -d postgres
+# docker-up:
+#     docker compose -f compose.yml up -d
 
-docker-ps:
-    docker compose -f compose.yml ps
+# postgres-up:
+#     docker compose -f compose.yml up -d postgres
 
-docker-logs service="postgres":
-    docker compose -f compose.yml logs -f {{ service }}
+# docker-ps:
+#     docker compose -f compose.yml ps
 
-docker-down:
-    docker compose -f compose.yml down
+# docker-logs service="postgres":
+#     docker compose -f compose.yml logs -f {{ service }}
 
-docker-reset:
-    docker compose -f compose.yml down -v
+# docker-down:
+#     docker compose -f compose.yml down
 
-# LOCAL DEV
-# CRC-32 (X-CRC32 header) testing for POST /telemetry
-crc32 file="body.json":
-    python3 -c 'import zlib; data=open("{{ file }}","rb").read(); print("{:08x}".format(zlib.crc32(data) & 0xffffffff))'
+# docker-reset:
+#     docker compose -f compose.yml down -v
 
-telemetry-ingest-no-crc file="body.json":
-    curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" --data-binary @"{{ file }}"
+# # LOCAL DEV
+# # CRC-32 (X-CRC32 header) testing for POST /telemetry
 
-telemetry-ingest-crc-ok file="body.json":
-    curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H 'content-type: application/json' -H "x-crc32: $(just crc32 {{ file }})" --data-binary @"{{ file }}"
+# telemetry-ingest-no-crc file="body.json":
+#     curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" --data-binary @"{{ file }}"
 
-telemetry-ingest-crc-bad file="body.json":
-    curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" -H "x-crc32: 00000000" --data-binary @"{{ file }}"
+# telemetry-ingest-crc-ok file="body.json":
+#     curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H 'content-type: application/json' -H "x-crc32: $(just crc32 {{ file }})" --data-binary @"{{ file }}"
 
-telemetry-ingest-crc-invalid file="body.json":
-    curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" -H "x-crc32: not-hex" --data-binary @"{{ file }}"
+# telemetry-ingest-crc-bad file="body.json":
+#     curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" -H "x-crc32: 00000000" --data-binary @"{{ file }}"
+
+# telemetry-ingest-crc-invalid file="body.json":
+#     curl -sS -i -X POST http://127.0.0.1:3000/telemetry -H "content-type: application/json" -H "x-crc32: not-hex" --data-binary @"{{ file }}"
