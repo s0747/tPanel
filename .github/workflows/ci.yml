@@ -27,7 +27,7 @@ jobs:
         steps:
             - name: Test
               run: echo "Uruchomione przez ${{ github.event_name }}"
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: actions-rs/toolchain@v1
               with:
@@ -50,7 +50,7 @@ jobs:
         name: Cargo deny
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: taiki-e/install-action@cargo-deny
 
@@ -61,7 +61,7 @@ jobs:
         name: Cargo code coverage
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Install the Rust toolchain
               uses: actions-rust-lang/setup-rust-toolchain@v1
