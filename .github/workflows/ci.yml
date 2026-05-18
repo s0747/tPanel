@@ -10,12 +10,14 @@ on:
         branches:
             - main
 
+    workflow_dispatch: # Reczne ucruchomienie.
+
 concurrency:
     group: ci-${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
 env:
-    CAGO_TERM_COLOR: always
+    CARGO_TERM_COLOR: always
     APP_USER: app
     APP_USER_PWD: secret
 
@@ -23,6 +25,8 @@ jobs:
     test:
         runs-on: ubuntu-latest
         steps:
+            - name: Test
+              run: echo "Uruchomione przez ${{ github.event_name }}"
             - uses: actions/checkout@v4
 
             - uses: actions-rs/toolchain@v1
