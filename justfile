@@ -1,20 +1,43 @@
 # JUSTFILE
 # cargo install just
+# 
+default:
+    @just --list
 
 # cargo install cargo-watch
-# Watch for changes
 watch:
     cargo watch -c -x "check"
 
-# Build
+[parallel]
+watch-dev: watch-broker watch-panel watch-core
+
+watch-broker:
+    cd broker && cargo watch -x "run --bin broker"
+
+watch-panel:
+    cd panel && cargo watch -x "run --bin panel"
+
+watch-core:
+    cd core && cargo watch -x "run --bin core"
+
+[parallel]
+run: run-broker run-panel run-core
+
+run-broker:
+    cd broker && cargo run --bin broker
+
+run-panel:
+    cd panel && cargo run --bin panel
+
+run-core:
+    cd core && cargo run --bin core
+
 build:
     cargo build --workspace
 
-# Clean build
 clean:
     cargo clean --workspace
 
-# Run all checks
 check:
     just fix
     just deny
@@ -23,25 +46,21 @@ check:
     just machete
     just doc
 
-# Non-destructive local validation (good before pushing)
 prepush:
     cargo fmt --all -- --check
     cargo clippy --all-targets --all-features -- -D warnings
     cargo test
     cargo deny check
 
-# Auto-fix clippy lints (when possible)
 fix:
     cargo fmt
     cargo clippy --all-targets --all-features --fix --allow-dirty --allow-staged
     cargo fmt
     cargo clippy --all-targets --all-features -- -D warnings
 
-# Compliance + supply-chain security checks
 deny:
     cargo deny check
 
-# Run tests
 test:
     cargo test
 
@@ -49,7 +68,6 @@ test:
 # cargo install cargo-llvm-cov
 
 # cargo install --locked cargo-tarpaulin
-# Code Coverage
 coverage:
     cargo tarpaulin --out Html --output-dir coverage
 
@@ -62,13 +80,37 @@ machete:
 doc:
     cargo doc --no-deps --open
 
-# Scripts
-#docker-build:
-#    /scripts/docker_build.sh
-#deploy-staging:
-#    /scripts/deploy_staging.sh
-#smoke:
-#    /scripts/smoke_test.sh
+# LOCAL DOCKER DEV
+# Konfiguracja lokalna
+project_name := "tpnel-local-dev"
+build_tag := "local-dev"
+#db_path := "local_data"
+
+db_path := justfile_directory() + "/local_data"
+
+docker-build:
+    docker build -f docker/Dockerfile -t {{ project_name }}:{{ build_tag }} .
+
+docker-run:
+    @mkdir -p {{ db_path }}
+    @echo "Uruchamianie... DB DIR: {{ justfile_directory() }}/{{ db_path }}"
+    docker run --rm -it \
+        -p 8080:8080 \
+        -v $(pwd)/{{ db_path }}:/app/data \
+        --name {{ project_name }}-dev \
+        {{ project_name }}:{{ build_tag }}
+
+docker-stop:
+    docker stop {{ project_name }}-dev || true
+
+#docker-dev: stop build r
+
+docker-clean:
+    cargo clean
+    docker rmi {{ project_name }}:{{ build_tag }} || true
+
+docker-debug:
+    docker exec -it {{ project_name }}-dev sh
 
 # LOCAL DEV
 # Tracing with OpenTelemetry + Jaeger

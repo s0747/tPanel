@@ -24,3 +24,9 @@ coverage/
 *.tmp.DS_Store
 backend/src/handlers/scratch.rs
 lcov.info
+
+# Mqtt Broker data
+broker/mqtt_storage/
+
+#SQLite data
+core/data/

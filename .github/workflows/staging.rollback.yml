@@ -1,0 +1,25 @@
+name: Rollback
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Rollback umage Tag (eg. sha-7b3f2a)"
+                required: true
+
+jobs:
+    rollback:
+        runs-on: ubuntu-latest
+        steps:
+            - name: SSH Rollback
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ secrets.STAGING_HOST }}
+                  username: ${{ secrets.STAGING_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      IMAGE=ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}
+                      docker pull $IMAGE
+                      docker stop my-app-staging || true
+                      docker rm my-app-staging || true
+                      docker run -d --name my-app-staging -p 8080:8080 $IMAGE
